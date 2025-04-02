@@ -31,17 +31,6 @@ export const EventCard = ({ event, onClick }: EventCardProps) => {
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      onTouchStart={(e) => {
-        // Only handle single touch events
-        if (e.touches.length === 1) {
-          e.stopPropagation();
-        }
-      }}
-      onTouchMove={(e) => {
-        if (e.touches.length === 1) {
-          e.stopPropagation();
-        }
-      }}
     >
       <div className="flex items-start justify-between">
         <div>

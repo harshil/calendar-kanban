@@ -19,9 +19,9 @@ export const Calendar = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 0,
-        delay: 0,
-        tolerance: 0,
+        distance: 3,
+        delay: 100,
+        tolerance: 5,
         pressure: 0,
       },
     })
