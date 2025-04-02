@@ -26,11 +26,22 @@ export const EventCard = ({ event, onClick }: EventCardProps) => {
       {...listeners}
       {...attributes}
       onClick={onClick}
-      className={`relative bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer transition-all duration-200 ${
+      className={`relative bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer transition-all duration-200 touch-none ${
         isDragging ? 'invisible' : ''
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
+      onTouchStart={(e) => {
+        // Only handle single touch events
+        if (e.touches.length === 1) {
+          e.stopPropagation();
+        }
+      }}
+      onTouchMove={(e) => {
+        if (e.touches.length === 1) {
+          e.stopPropagation();
+        }
+      }}
     >
       <div className="flex items-start justify-between">
         <div>

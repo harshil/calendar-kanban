@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable, DragStartEvent, DragMoveEvent } from '@dnd-kit/core';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { Event, EventsByDate } from '../types/event';
 import { EventCard } from './EventCard';
@@ -14,13 +14,15 @@ export const Calendar = () => {
   const [selectedEventForDetail, setSelectedEventForDetail] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [hasDateChanged, setHasDateChanged] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 0,
+        delay: 0,
+        tolerance: 0,
+        pressure: 0,
       },
     })
   );
@@ -33,6 +35,33 @@ export const Calendar = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const eventId = event.active.id as string;
+    let foundEvent: Event | null = null;
+    Object.values(events).forEach(dateEvents => {
+      const found = dateEvents.find(e => e.id === eventId);
+      if (found) foundEvent = found;
+    });
+    setDraggedEvent(foundEvent);
+    setHasDateChanged(false);
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    if (!isMobile || hasDateChanged) return;
+
+    const { delta } = event;
+    
+    // Change date if dragged far enough (reduced threshold to 30px)
+    if (Math.abs(delta.x) > 30) {
+      if (delta.x > 0) { // Dragging left
+        handleDateChange(1); // Move forward by 1 day
+      } else { // Dragging right
+        handleDateChange(-1); // Move backward by 1 day
+      }
+      setHasDateChanged(true);
+    }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -74,7 +103,9 @@ export const Calendar = () => {
       
       return newEvents;
     });
+    
     setDraggedEvent(null);
+    setHasDateChanged(false);
   };
 
   const getVisibleDates = () => {
@@ -87,31 +118,6 @@ export const Calendar = () => {
 
   const handleDateChange = (days: number) => {
     setSelectedDate(prev => addDays(prev, days));
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe) {
-      handleDateChange(1);
-    } else if (isRightSwipe) {
-      handleDateChange(-1);
-    }
-
-    setTouchStart(null);
-    setTouchEnd(null);
   };
 
   const DateColumn = ({ date }: { date: Date }) => {
@@ -143,9 +149,6 @@ export const Calendar = () => {
   return (
     <div 
       className="min-h-screen bg-gradient-to-br from-f6f8ff to-eef1f9"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
       <header className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
@@ -173,16 +176,9 @@ export const Calendar = () => {
       <main className="container mx-auto p-4">
         <DndContext 
           sensors={sensors} 
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
-          onDragStart={(event) => {
-            const eventId = event.active.id as string;
-            let foundEvent: Event | null = null;
-            Object.values(events).forEach(dateEvents => {
-              const found = dateEvents.find(e => e.id === eventId);
-              if (found) foundEvent = found;
-            });
-            setDraggedEvent(foundEvent);
-          }}
         >
           <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
             {getVisibleDates().map(date => (
@@ -191,10 +187,12 @@ export const Calendar = () => {
           </div>
           <DragOverlay dropAnimation={null}>
             {draggedEvent && (
-              <EventCard
-                event={draggedEvent}
-                onClick={() => {}}
-              />
+              <div className="touch-none">
+                <EventCard
+                  event={draggedEvent}
+                  onClick={() => {}}
+                />
+              </div>
             )}
           </DragOverlay>
         </DndContext>
