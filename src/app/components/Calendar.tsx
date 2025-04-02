@@ -14,6 +14,8 @@ export const Calendar = () => {
   const [selectedEventForDetail, setSelectedEventForDetail] = useState<Event | null>(null);
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -87,6 +89,31 @@ export const Calendar = () => {
     setSelectedDate(prev => addDays(prev, days));
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      handleDateChange(1);
+    } else if (isRightSwipe) {
+      handleDateChange(-1);
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
   const DateColumn = ({ date }: { date: Date }) => {
     const { setNodeRef } = useDroppable({
       id: format(date, 'yyyy-MM-dd'),
@@ -114,7 +141,12 @@ export const Calendar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-f6f8ff to-eef1f9">
+    <div 
+      className="min-h-screen bg-gradient-to-br from-f6f8ff to-eef1f9"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <header className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Calendar</h1>
