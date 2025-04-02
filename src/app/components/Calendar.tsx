@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, useSensor, useSensors, PointerSensor, useDroppable } from '@dnd-kit/core';
 import { format, addDays, startOfWeek } from 'date-fns';
 import { Event, EventsByDate } from '../types/event';
 import { EventCard } from './EventCard';
@@ -11,7 +11,8 @@ import { events as initialEvents } from '../data/events';
 export const Calendar = () => {
   const [events, setEvents] = useState<EventsByDate>(initialEvents);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEventForDetail, setSelectedEventForDetail] = useState<Event | null>(null);
+  const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   const sensors = useSensors(
@@ -62,12 +63,16 @@ export const Calendar = () => {
       if (!newEvents[targetDate]) {
         newEvents[targetDate] = [];
       }
-      if (draggedEvent) {
-        newEvents[targetDate].push(draggedEvent);
-      }
+      
+      // Remove any existing event with the same ID from target date
+      newEvents[targetDate] = newEvents[targetDate].filter(e => e.id !== eventId);
+      
+      // Add the dragged event to the target date
+      newEvents[targetDate] = [...newEvents[targetDate], draggedEvent!];
       
       return newEvents;
     });
+    setDraggedEvent(null);
   };
 
   const getVisibleDates = () => {
@@ -80,6 +85,32 @@ export const Calendar = () => {
 
   const handleDateChange = (days: number) => {
     setSelectedDate(prev => addDays(prev, days));
+  };
+
+  const DateColumn = ({ date }: { date: Date }) => {
+    const { setNodeRef } = useDroppable({
+      id: format(date, 'yyyy-MM-dd'),
+    });
+
+    return (
+      <div
+        ref={setNodeRef}
+        className="bg-white rounded-lg p-4 min-h-[200px]"
+      >
+        <h3 className="text-lg font-semibold mb-4">
+          {format(date, 'EEE, MMM d')}
+        </h3>
+        <div className="space-y-4">
+          {events[format(date, 'yyyy-MM-dd')]?.map(event => (
+            <EventCard
+              key={`${format(date, 'yyyy-MM-dd')}-${event.id}`}
+              event={event}
+              onClick={() => setSelectedEventForDetail(event)}
+            />
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -108,33 +139,28 @@ export const Calendar = () => {
       </header>
 
       <main className="container mx-auto p-4">
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <DndContext 
+          sensors={sensors} 
+          onDragEnd={handleDragEnd}
+          onDragStart={(event) => {
+            const eventId = event.active.id as string;
+            let foundEvent: Event | null = null;
+            Object.values(events).forEach(dateEvents => {
+              const found = dateEvents.find(e => e.id === eventId);
+              if (found) foundEvent = found;
+            });
+            setDraggedEvent(foundEvent);
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
             {getVisibleDates().map(date => (
-              <div
-                key={date.toISOString()}
-                className="bg-white rounded-lg p-4 min-h-[200px]"
-                id={format(date, 'yyyy-MM-dd')}
-              >
-                <h3 className="text-lg font-semibold mb-4">
-                  {format(date, 'EEE, MMM d')}
-                </h3>
-                <div className="space-y-4">
-                  {events[format(date, 'yyyy-MM-dd')]?.map(event => (
-                    <EventCard
-                      key={event.id}
-                      event={event}
-                      onClick={() => setSelectedEvent(event)}
-                    />
-                  ))}
-                </div>
-              </div>
+              <DateColumn key={date.toISOString()} date={date} />
             ))}
           </div>
-          <DragOverlay>
-            {selectedEvent && (
+          <DragOverlay dropAnimation={null}>
+            {draggedEvent && (
               <EventCard
-                event={selectedEvent}
+                event={draggedEvent}
                 onClick={() => {}}
               />
             )}
@@ -142,10 +168,10 @@ export const Calendar = () => {
         </DndContext>
       </main>
 
-      {selectedEvent && (
+      {selectedEventForDetail && (
         <EventDetail
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
+          event={selectedEventForDetail}
+          onClose={() => setSelectedEventForDetail(null)}
         />
       )}
     </div>

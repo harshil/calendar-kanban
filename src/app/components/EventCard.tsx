@@ -27,7 +27,7 @@ export const EventCard = ({ event, onClick }: EventCardProps) => {
       {...attributes}
       onClick={onClick}
       className={`relative bg-white rounded-lg shadow-md p-4 mb-4 cursor-pointer transition-all duration-200 ${
-        isDragging ? 'opacity-50' : ''
+        isDragging ? 'invisible' : ''
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
