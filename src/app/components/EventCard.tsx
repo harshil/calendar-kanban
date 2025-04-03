@@ -37,13 +37,6 @@ export const EventCard = ({ event, onClick }: EventCardProps) => {
           <h3 className="text-lg font-semibold text-gray-900">{event.title}</h3>
           <p className="text-sm text-gray-500 mt-1">{event.time}</p>
         </div>
-        <div className="w-16 h-16 rounded-lg overflow-hidden">
-          <img
-            src={event.imageUrl}
-            alt={event.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
       </div>
       <p className="text-sm text-gray-600 mt-2 line-clamp-2">{event.description}</p>
     </motion.div>

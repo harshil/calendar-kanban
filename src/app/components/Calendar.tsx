@@ -109,11 +109,8 @@ export const Calendar = () => {
   };
 
   const getVisibleDates = () => {
-    if (isMobile) {
-      return [selectedDate];
-    }
-    const start = startOfWeek(selectedDate);
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    const start = startOfWeek(selectedDate, { weekStartsOn: 1 });
+    return Array.from({ length: 5 }, (_, i) => addDays(start, i));
   };
 
   const handleDateChange = (days: number) => {
@@ -130,7 +127,7 @@ export const Calendar = () => {
         ref={setNodeRef}
         className="bg-white rounded-lg p-4 min-h-[200px]"
       >
-        <h3 className="text-lg font-semibold mb-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-500">
           {format(date, 'EEE, MMM d')}
         </h3>
         <div className="space-y-4">
@@ -152,24 +149,10 @@ export const Calendar = () => {
     >
       <header className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Calendar</h1>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => handleDateChange(isMobile ? -1 : -7)}
-              className="p-2 rounded-full hover:bg-white/10"
-            >
-              ←
-            </button>
-            <span className="text-lg">
-              {format(selectedDate, 'MMMM d, yyyy')}
-            </span>
-            <button
-              onClick={() => handleDateChange(isMobile ? 1 : 7)}
-              className="p-2 rounded-full hover:bg-white/10"
-            >
-              →
-            </button>
-          </div>
+          <h1 className="text-2xl font-bold">Weekly Event Board</h1>
+        </div>
+        <div className="container mx-auto flex justify-between items-center">
+          <p className="text-sm text-gray-300">Drag and drop events to rearrange them</p>
         </div>
       </header>
 
@@ -180,7 +163,7 @@ export const Calendar = () => {
           onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {getVisibleDates().map(date => (
               <DateColumn key={date.toISOString()} date={date} />
             ))}

@@ -1,7 +1,7 @@
 import { EventsByDate } from '../types/event';
 
 export const events: EventsByDate = {
-  "2025-04-01": [
+  "2025-03-31": [
     {
       id: "event-1",
       title: "Coffee with Alex",
@@ -10,7 +10,7 @@ export const events: EventsByDate = {
       time: "09:00 AM",
     },
   ],
-  "2025-04-02": [
+  "2025-04-01": [
     {
       id: "event-2",
       title: "Team Standup",
@@ -19,7 +19,7 @@ export const events: EventsByDate = {
       time: "02:00 PM",
     },
   ],
-  "2025-04-03": [
+  "2025-04-02": [
     {
       id: "event-3",
       title: "Yoga Session",
@@ -28,7 +28,7 @@ export const events: EventsByDate = {
       time: "12:00 PM",
     },
   ],
-  "2025-04-04": [
+  "2025-04-03": [
     {
       id: "event-4",
       title: "Product Demo",
@@ -37,7 +37,7 @@ export const events: EventsByDate = {
       time: "03:30 PM",
     },
   ],
-  "2025-04-05": [
+  "2025-04-04": [
     {
       id: "event-5",
       title: "Client Meeting",
